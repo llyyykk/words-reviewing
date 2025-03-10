@@ -8,12 +8,12 @@ import os
 
 
 CONFIG = {
-    "input_dir": r"route.",
+    "input_dir": r"C:\Users\NUC\Desktop\gre词汇\原始文件",
     "file_prefix": "words_day",
     "file_suffix": ".xlsx",
     "required_columns": ["words", "remember","definition","complement","times","importance"],  # mandatory column validation
     "enable_backup": True,  #back up files or not
-    "backup_dir": r"route."
+    "backup_dir": r"C:\Users\NUC\Desktop\gre词汇\备份文件"
 }
 
 
@@ -35,7 +35,8 @@ class MultiExcelLoader:
             backup_dir = Path(self.config["backup_dir"])
             backup_dir.mkdir(parents=True, exist_ok=True)
             backup_path = backup_dir / f"backup_{path.name}"
-            shutil.copy2(path, backup_path)
+            #shutil.copy2(path, backup_path)
+            path.rename(backup_path)
             return backup_path
         return None
 
@@ -50,7 +51,7 @@ class MultiExcelLoader:
         try:
             df = pd.read_excel(path, engine='openpyxl')
             df["origin"]=path
-            df["times"]=0
+            df['times'] = df['times'].fillna(0)
 
             if self.config["required_columns"]:
                 self.validate_columns(df)
@@ -127,7 +128,7 @@ def data_back(combined_df,path_back):
     for origin_value, group_df in grouped:
 
         group_finish=group_df.drop("origin",axis=1)
-        filename = f"{str(origin_value)}.xlsx"
+        filename = f"{str(origin_value)}"
         filepath = os.path.join(path_back, filename)
 
         group_finish.to_excel(filepath, index=False)
@@ -147,8 +148,22 @@ def present_value(combined_df,j,fault_sum):
         fault_sum += 1
     return fault_sum,combined_df
 
+def num_judge():
+    num_all=int(input("是要乱序背所有单词吗：（1表示所有，0表示部分）"))
+    if (num_all==0):
+        num_choose=int(input("要背多少个单词呢"))
+        return num_choose
 
-def mode_judge(combined_df):
+def weigh_judge(combined_df):
+    combined_df=combined_df.sort_values("times",ascending= False)
+    return combined_df
+
+
+def order_judge(combined_df):
+    whether_weigh=int(input("是否按照错误次数背单词？（1表示按照，0表示不按照）"))
+    if whether_weigh==1:
+        combined_df=weigh_judge(combined_df)
+
     order = int(input("请输入复习单词时的顺序：（1表示正序，2表示乱序）"))
     print("欢迎开始您的背单词之旅！若中途暂停只需按下 a 键，即可停止背单词并生成反馈")
     fault_sum = 0 #错误个数
@@ -167,6 +182,7 @@ def mode_judge(combined_df):
 
     elif order == 2:
         shuffled_indices = random.sample(range(len(combined_df)), len(combined_df))
+        words_end = num_judge()
         for j in shuffled_indices:
             words_num += 1
             fault_sum,combined_df=present_value(combined_df, j, fault_sum)
@@ -175,6 +191,8 @@ def mode_judge(combined_df):
                 print("检测到 a 键,停止背单词")
                 break
             '''
+            if words_num==words_end:
+                break
 
     else:
         print("无效的输入")
@@ -188,4 +206,4 @@ if __name__ == "__main__":
     combined_df = loader.combine_dataframes()
 
     if combined_df is not None:
-        mode_judge(combined_df)
+        order_judge(combined_df)
