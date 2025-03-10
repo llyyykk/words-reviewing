@@ -8,12 +8,12 @@ import os
 
 
 CONFIG = {
-    "input_dir": r"C:\Users\NUC\Desktop\gre词汇\原始文件",
+    "input_dir": r"route.",
     "file_prefix": "words_day",
     "file_suffix": ".xlsx",
     "required_columns": ["words", "remember","definition","complement","times","importance"],  # mandatory column validation
     "enable_backup": True,  #back up files or not
-    "backup_dir": r"C:\Users\NUC\Desktop\gre词汇\备份文件"
+    "backup_dir": r"route."
 }
 
 
